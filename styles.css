@@ -1,0 +1,197 @@
+/* -------------------------------------------------------
+   Tokens — pulled from the two Figma screenshots
+   ------------------------------------------------------- */
+:root {
+  --card-bg: #e8e7ec;
+  --card-radius: 12px;
+  --ink: #171717;
+  --ink-muted: #8a8a8a;
+  --white: #ffffff;
+  --inset: 8px;
+
+  /* How long the enter/leave GIFs actually play, in ms.
+     Keep these in sync with script.js -> ENTER_DURATION / LEAVE_DURATION,
+     and with the real duration of your exported GIFs once you swap them in. */
+  --size-bar-transition: 380ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  font-family: Arial, "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.page {
+  padding: 48px 24px;
+}
+
+/* -------------------------------------------------------
+   Card
+   ------------------------------------------------------- */
+.product-card {
+  position: relative;
+  width: min(360px, 86vw);
+  aspect-ratio: 392 / 489;
+  border-radius: var(--card-radius);
+  background: var(--card-bg);
+  overflow: hidden;
+  cursor: pointer;
+  isolation: isolate;
+}
+
+/* Photo layer — the element script.js manipulates */
+.product-card__media {
+  position: absolute;
+  inset: 0;
+}
+
+.product-card__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+/* -------------------------------------------------------
+   Top row: NEW badge + wishlist button
+   ------------------------------------------------------- */
+.product-card__top {
+  position: absolute;
+  top: var(--inset);
+  left: var(--inset);
+  right: var(--inset);
+  z-index: 3;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  pointer-events: none; /* re-enabled on the interactive children below */
+}
+
+.badge-new {
+  pointer-events: auto;
+  background: var(--white);
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 500; 
+  letter-spacing: 0.05em; 
+  padding: 3px 6px;
+  border-radius: 6px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #d8dadd;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.btn-wishlist {
+  pointer-events: auto;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: var(--white);
+  color: #00000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  transition: color 150ms ease;
+}
+
+.btn-wishlist:hover {
+  color: var(--ink);
+}
+
+/* Gør, at vi kan animere udfyldningen (fill) af hjertet blødt */
+.btn-wishlist svg path {
+  fill: transparent;
+  transition: fill 150ms ease-in;
+}
+
+.btn-wishlist.is-active svg path {
+  fill: currentColor;
+  transition: fill 250ms ease-out;
+}
+
+/* Valgfrit: Gør hjertet rødt (eller en anden farve), når det er aktivt */
+.btn-wishlist.is-active {
+  color: var(--ink); /* Du kan slette denne linje, hvis det bare skal være sort/mørkt */
+}
+
+/* -------------------------------------------------------
+   Size bar — hidden below the card, slides up on hover
+   ------------------------------------------------------- */
+.size-bar {
+  position: absolute;
+  left: var(--inset);
+  right: var(--inset);
+  bottom: var(--inset);
+  height: 32px;
+  z-index: 3;
+  background: var(--white);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 20px;
+  padding: 0 18px;
+
+  transform: translateY(calc(100% + var(--inset) + 8px));
+  will-change: transform;
+  
+  /* NYT: En roligere ease-in-out eller ease-in til når den forlader kortet */
+  transition: transform 320ms ease-in-out;
+}
+
+.product-card.is-hover .size-bar {
+  transform: translateY(0);
+
+  /* DIN OPRINDELIGE KURVE: Den hurtige, snappy animation når den kommer frem */
+  transition: transform var(--size-bar-transition);
+}
+
+.size-bar__option {
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 10px;
+  color: var(--ink-muted);
+  padding: 4px 2px;
+  cursor: pointer;
+}
+
+.size-bar__option.is-selected {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* -------------------------------------------------------
+   Accessibility
+   ------------------------------------------------------- */
+.product-card:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.btn-wishlist:focus-visible,
+.size-bar__option:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .size-bar {
+    transition: none;
+  }
+}
