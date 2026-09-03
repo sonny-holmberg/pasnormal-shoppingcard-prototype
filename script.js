@@ -26,6 +26,7 @@
     mp4Source.src = clip.mp4;
     mp4Source.type = 'video/mp4';
 
+    // webm first: browsers use the first source type they support
     video.append(webmSource, mp4Source);
     video.load();
   }
@@ -39,7 +40,7 @@
 
 function playTransition(clip, startStaticSrc, nextStaticSrc, nextState) {
     const myRequest = ++requestId;
-    
+
     img.src = startStaticSrc;
     
     hideVideoInstantly();
@@ -77,8 +78,8 @@ function handleEnter() {
 function handleLeave() {
     if (state === 'default' || state === 'leaving') return;
     state = 'leaving';
-    card.classList.remove('is-hover'); // size bar starts sliding down now
-
+    card.classList.remove('is-hover');
+    
     playTransition(ASSETS.leave, ASSETS.hover, ASSETS.default, 'default');
   }
 
@@ -111,6 +112,21 @@ function handleLeave() {
 
     const isPressed = wishlistBtn.classList.contains('is-active');
     wishlistBtn.setAttribute('aria-pressed', isPressed);
+  });
+
+  const addToCartBtn = card.querySelector('.size-bar__action');
+
+  addToCartBtn.addEventListener('click', (event) => {
+    event.stopPropagation();
+
+    const originalText = addToCartBtn.textContent;
+    addToCartBtn.textContent = "Added!";
+    addToCartBtn.style.background = "#2B692E";
+
+    setTimeout(() => {
+      addToCartBtn.textContent = originalText;
+      addToCartBtn.style.background = "";
+    }, 1200);
   });
 
 })();
