@@ -13,38 +13,54 @@
 
   <main class="page">
 
-    <article class="product-card" id="productCard">
+<article class="product-card" id="productCard">
+      
+      <!-- NEW: Wrapper for the grey background, images, and interactive elements -->
+      <div class="product-card__media-wrap">
+        
+        <!-- Photo & Video layer -->
+        <div class="product-card__media">
+          <img
+            class="product-card__image"
+            id="cardImage"
+            src="assets/default.png"
+            alt="Sweet Protection helmet"
+            draggable="false"
+          />
+          <video
+            class="product-card__video"
+            id="cardVideo"
+            muted
+            playsinline
+            preload="auto"
+          ></video>
+        </div>
 
-      <!-- Photo layer: this <img> is the only thing script.js swaps between
-           default.jpg -> enter.gif -> hover.jpg -> leave.gif -> default.jpg -->
-      <div class="product-card__media">
-        <img
-          class="product-card__image"
-          id="cardImage"
-          src="assets/default.png"
-          alt="Sweet Protection helmet"
-          draggable="false"
-        />
-      </div>
+        <!-- Badge + wishlist button -->
+        <div class="product-card__top">
+          <span class="badge-new">New</span>
+          <button class="btn-wishlist" type="button" aria-label="Add to wishlist" aria-pressed="false">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="15" fill="none" viewBox="0 0 14 15"><g clip-path="url(#clip0_8220_26284)">
+              <path stroke="currentColor" stroke-width="0.5" d="M6.388 11.925c-1.51-1.369-2.734-2.48-3.585-3.52-.847-1.036-1.288-1.96-1.288-2.947A2.827 2.827 0 0 1 4.373 2.6c.91 0 1.787.425 2.359 1.096l.266.313.267-.313A3.14 3.14 0 0 1 9.623 2.6a2.827 2.827 0 0 1 2.859 2.858c0 .988-.441 1.911-1.288 2.948-.85 1.04-2.074 2.151-3.581 3.521l-.003.003-.001.001-.61.55z"></path>
+            </g><defs><clipPath id="clip0_8220_26284">
+              <path fill="transparent" d="M0 .5h14v14H0z"></path>
+            </clipPath></defs></svg>
+          </button>
+        </div>
 
-      <!-- Badge + wishlist button sit above the photo layer, unaffected by state -->
-      <div class="product-card__top">
-        <span class="badge-new">New</span>
+        <!-- Size bar -->
+        <div class="size-bar" id="sizeBar" aria-hidden="true">
+          <button class="size-bar__option is-selected" type="button">S/M</button>
+          <button class="size-bar__option" type="button">M/L</button>
+          <button class="size-bar__option" type="button">L/XL</button>
+        </div>
+      </div> <!-- /media-wrap -->
 
-        <button class="btn-wishlist" type="button" aria-label="Add to wishlist" aria-pressed="false">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="15" fill="none" viewBox="0 0 14 15"><g clip-path="url(#clip0_8220_26284)">
-            <path stroke="currentColor" stroke-width="0.5" d="M6.388 11.925c-1.51-1.369-2.734-2.48-3.585-3.52-.847-1.036-1.288-1.96-1.288-2.947A2.827 2.827 0 0 1 4.373 2.6c.91 0 1.787.425 2.359 1.096l.266.313.267-.313A3.14 3.14 0 0 1 9.623 2.6a2.827 2.827 0 0 1 2.859 2.858c0 .988-.441 1.911-1.288 2.948-.85 1.04-2.074 2.151-3.581 3.521l-.003.003-.001.001-.61.55z"></path>
-          </g><defs><clipPath id="clip0_8220_26284">
-            <path fill="transparent" d="M0 .5h14v14H0z">
-            </path></clipPath></defs></svg>
-        </button>
-      </div>
-
-      <!-- Size bar: hidden below the card by default, slides up when .is-hover is toggled -->
-      <div class="size-bar" id="sizeBar" aria-hidden="true">
-        <button class="size-bar__option is-selected" type="button">S/M</button>
-        <button class="size-bar__option" type="button">M/L</button>
-        <button class="size-bar__option" type="button">L/XL</button>
+      <!-- NEW: Product information text -->
+      <div class="product-card__info">
+        <h2 class="product-card__title">Commuter Mips Helmet</h2>
+        <p class="product-card__subtitle">Ash Brown - 1 colour</p>
+        <p class="product-card__price">1.400,00 kr</p>
       </div>
 
     </article>
