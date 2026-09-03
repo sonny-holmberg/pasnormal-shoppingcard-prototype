@@ -3,70 +3,114 @@
  * -----------------------------------------------------------------------
  * States: "default" -> "entering" -> "hover" -> "leaving" -> "default"
  *
- *  mouseenter : play enter.gif once, then hold on hover.jpg (static)
- *  mouseleave : play leave.gif once, then hold on default.jpg (static)
+ *  mouseenter : crossfade video on top of the image, play enter clip,
+ *               then crossfade to the static hover.png underneath
+ *  mouseleave : same in reverse with the leave clip, landing on default.png
  *
- * The size bar toggles via a single "is-hover" class on the card, driven
- * by CSS transitions in styles.css — it slides up as soon as the enter
- * sequence starts, and slides down as soon as the leave sequence starts.
- *
- * GIFs have no reliable "finished playing" event in the browser, so this
- * relies on a timer that should match the real duration of your exported
- * GIF. Update ENTER_DURATION / LEAVE_DURATION below whenever you swap in
- * new GIF files.
+ * Unlike GIFs, <video> fires a real "ended" event the instant playback
+ * finishes — so there's no manual duration to guess or keep in sync with
+ * the asset. The only timing constant left is the crossfade itself.
  * -----------------------------------------------------------------------
  */
 
 (() => {
   const card = document.getElementById('productCard');
-  const image = document.getElementById('cardImage');
+  const img = document.getElementById('cardImage');
+  const video = document.getElementById('cardVideo');
 
   const ASSETS = {
     default: 'assets/default.png',
     hover: 'assets/hover.png',
-    enterGif: 'assets/enter.gif',
-    leaveGif: 'assets/leave.gif',
+    enter: { webm: 'assets/enter.webm', mp4: 'assets/enter.mp4' },
+    leave: { webm: 'assets/leave.webm', mp4: 'assets/leave.mp4' },
   };
 
-  // Match these to the ACTUAL playback length of your GIFs, in milliseconds.
-  const ENTER_DURATION = 500;
-  const LEAVE_DURATION = 500;
+  // How long the image <-> video dissolve takes, in ms.
+  // Keep this in sync with --crossfade-transition in styles.css.
+  const CROSSFADE_MS = 220;
 
   let state = 'default'; // 'default' | 'entering' | 'hover' | 'leaving'
-  let pendingTimer = null;
+  let requestId = 0; // guards against a stale callback from an interrupted sequence
 
-  /**
-   * Sets the <img> src with a cache-busting query param so the GIF
-   * restarts from its first frame every time, even if it was just shown.
-   */
-  function playGif(src, duration, onComplete) {
-    clearTimeout(pendingTimer);
-    image.src = `${src}?play=${Date.now()}`;
-    pendingTimer = setTimeout(onComplete, duration);
+  function setVideoSource(clip) {
+    video.querySelectorAll('source').forEach((s) => s.remove());
+
+    const webmSource = document.createElement('source');
+    webmSource.src = clip.webm;
+    webmSource.type = 'video/webm';
+
+    const mp4Source = document.createElement('source');
+    mp4Source.src = clip.mp4;
+    mp4Source.type = 'video/mp4';
+
+    // webm first: browsers use the first source type they support
+    video.append(webmSource, mp4Source);
+    video.load();
   }
 
-  function handleEnter() {
-    if (state === 'entering' || state === 'hover') return;
+  function hideVideoInstantly() {
+    // Used when a new sequence interrupts one that's still mid-fade.
+    // Swapping the source (below) briefly clears the video's rendered
+    // frame, so if it were still fading in/out via the normal CSS
+    // transition at that moment, that blank frame — and whatever static
+    // image sits underneath it — would flash through. Snapping opacity
+    // to 0 with no transition first guarantees there's nothing to see
+    // during the swap; the new clip then fades in fresh as normal.
+    video.style.transition = 'none';
+    video.classList.remove('is-visible');
+    void video.offsetWidth; // force layout so the transition:none actually applies
+    video.style.transition = '';
+  }
 
+function playTransition(clip, startStaticSrc, nextStaticSrc, nextState) {
+    const myRequest = ++requestId;
+    
+    // FIX: Pre-emptively update the static background image to match 
+    // the first frame of the new video BEFORE we hide the video layer.
+    img.src = startStaticSrc;
+    
+    hideVideoInstantly();
+    setVideoSource(clip);
+    video.currentTime = 0;
+
+    // Fade the video in only once it's actually rendering frames
+    video.onplaying = () => {
+      if (myRequest !== requestId) return;
+      video.classList.add('is-visible');
+    };
+
+    video.onended = () => {
+      if (myRequest !== requestId) return;
+
+      // swap the static image underneath, then dissolve the video back out
+      img.src = nextStaticSrc;
+      video.classList.remove('is-visible');
+
+      setTimeout(() => {
+        if (myRequest === requestId) state = nextState;
+      }, CROSSFADE_MS);
+    };
+
+    const playPromise = video.play();
+    if (playPromise && playPromise.catch) playPromise.catch(() => {});
+  }
+
+function handleEnter() {
+    if (state === 'entering' || state === 'hover') return;
     state = 'entering';
     card.classList.add('is-hover'); // size bar starts sliding up now
-
-    playGif(ASSETS.enterGif, ENTER_DURATION, () => {
-      image.src = ASSETS.hover;
-      state = 'hover';
-    });
+    
+    // We pass ASSETS.default as the starting visual, and ASSETS.hover as the ending visual
+    playTransition(ASSETS.enter, ASSETS.default, ASSETS.hover, 'hover');
   }
 
-  function handleLeave() {
+function handleLeave() {
     if (state === 'default' || state === 'leaving') return;
-
     state = 'leaving';
     card.classList.remove('is-hover'); // size bar starts sliding down now
-
-    playGif(ASSETS.leaveGif, LEAVE_DURATION, () => {
-      image.src = ASSETS.default;
-      state = 'default';
-    });
+    
+    // We pass ASSETS.hover as the starting visual, and ASSETS.default as the ending visual
+    playTransition(ASSETS.leave, ASSETS.hover, ASSETS.default, 'default');
   }
 
   card.addEventListener('mouseenter', handleEnter);
@@ -76,15 +120,15 @@
   card.addEventListener('focus', handleEnter);
   card.addEventListener('blur', handleLeave);
 
-  // --- NYT: Gør størrelses-knapperne interaktive ---
-  
+  // --- Gør størrelses-knapperne interaktive ---
+
   // Find alle knapperne inde i size-baren
   const sizeOptions = card.querySelectorAll('.size-bar__option');
 
   // Gennemgå hver knap og tilføj en 'click' event listener
   sizeOptions.forEach(option => {
     option.addEventListener('click', (event) => {
-      // Forhindrer klikket i at boble op til selve kortet (god praksis, 
+      // Forhindrer klikket i at boble op til selve kortet (god praksis,
       // hvis du senere tilføjer et link til hele kortet)
       event.stopPropagation();
 
@@ -96,7 +140,7 @@
     });
   });
 
-  // --- NYT: Gør wishlist-hjertet interaktivt ---
+  // --- Gør wishlist-hjertet interaktivt ---
   const wishlistBtn = card.querySelector('.btn-wishlist');
 
   wishlistBtn.addEventListener('click', (event) => {

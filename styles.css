@@ -13,6 +13,10 @@
      Keep these in sync with script.js -> ENTER_DURATION / LEAVE_DURATION,
      and with the real duration of your exported GIFs once you swap them in. */
   --size-bar-transition: 380ms cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  /* Crossfade between the static image and the video layer.
+     Keep this in sync with script.js -> CROSSFADE_MS. */
+  --crossfade-transition: 220ms ease;
 }
 
 * { box-sizing: border-box; }
@@ -36,22 +40,29 @@ body {
    ------------------------------------------------------- */
 .product-card {
   position: relative;
-  width: min(360px, 86vw);
+  /* Responsive width: min 280px, scales fluidly, max 392px */
+  width: clamp(280px, 90vw, 500px);
+  cursor: pointer;
+}
+
+/* We moved the background, borders, and aspect ratio to this new wrapper */
+.product-card__media-wrap {
+  position: relative;
   aspect-ratio: 392 / 489;
   border-radius: var(--card-radius);
   background: var(--card-bg);
   overflow: hidden;
-  cursor: pointer;
   isolation: isolate;
 }
 
-/* Photo layer — the element script.js manipulates */
+/* Photo layer — img holds the current static frame, video crossfades on top of it */
 .product-card__media {
   position: absolute;
   inset: 0;
 }
 
-.product-card__image {
+.product-card__image,
+.product-card__video {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -60,6 +71,55 @@ body {
   display: block;
   -webkit-user-drag: none;
   user-select: none;
+}
+
+.product-card__image {
+  z-index: 1;
+}
+
+.product-card__video {
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--crossfade-transition);
+}
+
+.product-card__video.is-visible {
+  opacity: 1;
+}
+
+/* -------------------------------------------------------
+   Product Info (Typography & Spacing)
+   ------------------------------------------------------- */
+.product-card__info {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.product-card__title {
+  margin: 0;
+  padding-left: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.product-card__subtitle {
+  /* 4px spacing below the title */
+  margin: 4px 0 0 0; 
+  padding-left: 12px;
+  font-size: 11px;
+  color: var(--ink);
+}
+
+.product-card__price {
+  /* 8px spacing below the subtitle */
+  margin: 12px 0 0 0; 
+  padding-left: 12px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--ink);
 }
 
 /* -------------------------------------------------------
@@ -100,7 +160,7 @@ body {
   border-radius: 50%;
   border: none;
   background: var(--white);
-  color: #00000;
+  color: #171717;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -191,7 +251,8 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .size-bar {
+  .size-bar,
+  .product-card__video {
     transition: none;
   }
 }
